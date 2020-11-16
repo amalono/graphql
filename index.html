@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>GraphiQL by Endre F. Kiss</title><style>
+    th.MuiTableCell-head {
+        font-weight: bold;
+    }
+    tr {
+        height: 30px;
+    }
+    table.detailTable {
+        font-family: Arial;
+    }
+</style>
+</head>
+<body>
+
+<h2>Launches</h2>
+
+<script src="https://unpkg.com/react@16.13.1/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@16.13.1/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@material-ui/core@latest/umd/material-ui.production.min.js"></script>
+<script src="https://unpkg.com/babel-standalone@latest/babel.min.js" crossorigin="anonymous"></script>
+
+<div id="root"></div>
+<script type="text/babel">
+    const {
+        colors,
+        ThemeProvider,
+        makeStyles,
+        Table,
+        TableBody,
+        TableCell,
+        TableContainer,
+        TableHead,
+        TableRow,
+        TablePagination,
+        Paper,
+        Grid,
+        withStyles,
+        createStyles,
+        createMuiTheme,
+    } = MaterialUI;
+
+    const theme = createMuiTheme({
+        palette: {
+            primary: {
+                main: '#556cd6',
+            },
+            secondary: {
+                main: '#19857b',
+            },
+            error: {
+                main: colors.red.A400,
+            },
+            background: {
+                default: '#fff',
+            },
+        },
+    });
+
+
+
+    function App() {
+
+        const useStyles = makeStyles({
+            table: {
+                minWidth: 650,
+            }
+        });
+
+        const classes = useStyles();
+        const [page, setPage] = React.useState(0);
+        const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
+        const handleChangePage = (event: unknown, newPage: number) => {
+            setPage(newPage);
+        };
+
+        const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+            setRowsPerPage(parseInt(event.target.value, 10));
+            setPage(0);
+        };
+
+        const StyledTableRow = withStyles((theme: Theme) =>
+            createStyles({
+                root: {
+                    '&:nth-of-type(odd)': {
+                        backgroundColor: theme.palette.action.hover,
+                    },
+                },
+            }),
+        )(TableRow);
+
+        let row2 = {};
+
+        const showDetails = (row) => (event: React.MouseEvent<unknown>) => {
+
+            let tableContent = ''
+                +'<table class="detailTable">'
+                + '<tbody>'
+                + '<tr>'
+                +    '<th style="width: 130px">Name</th>'
+                +    '<td>' + row.mission_name + '</td>'
+                + '</tr>'
+                + '<tr>'
+                +    '<th>Launch date</th>'
+                +    '<td>' + row.launch_date_local + '</td>'
+                + '</tr>'
+                + '<tr>'
+                +    '<th>Launch site</th>'
+                +    '<td>' + row.launch_site.site_name_long + '</td>'
+                + '</tr>'
+                + '<tr>'
+                +    '<th>Article link</th>'
+                +    '<td>' + row.links.article_link + '</td>'
+                + '</tr>'
+                + '<tr>'
+                +    '<th>Video link</th>'
+                +    '<td>' + row.links.video_link + '</td>'
+                + '</tr>'
+                + '<tr>'
+                +    '<th>Rocket</th>'
+                +    '<td>' + row.rocket.rocket_name + '</td>'
+                + '</tr>';
+
+            let shipNumber = 1;
+            row.ships = row.ships.filter(x => x !== null);
+            row.ships.map((ship) =>
+                (
+                    tableContent += ''
+                        + '<tr>'
+                        + '<th colspan="2" style="text-align: center">Ship #' + shipNumber++ + '</th>'
+                        + '</tr>'
+                        + '<tr>'
+                        + '<th>Ship name</th>'
+                        + '<td>' + ship.name + '</td>'
+                        + '</tr>'
+                        + '<tr>'
+                        + '<th>Home port</th>'
+                        + '<td>' + ship.home_port + '</td>'
+                        + '</tr>'
+                ))
+
+            let payloadNumber = 1;
+            console.log(row);
+            row.rocket.second_stage.payloads = row.rocket.second_stage.payloads.filter(x => x !== null);
+
+            row.rocket.second_stage.payloads.map((payload) =>
+                (
+                    tableContent += ''
+                        + '<tr>'
+                        + '<th colspan="2" style="text-align: center">Payload #' + payloadNumber++ + '</th>'
+                        + '</tr>'
+                        + '<tr>'
+                        + '<th>Payload type</th>'
+                        + '<td>' + payload.payload_type + '</td>'
+                        + '</tr>'
+                        + '<tr>'
+                        + '<th>Payload mass kg</th>'
+                        + '<td>' + payload.payload_mass_kg + '</td>'
+                        + '</tr>'
+                        + '<tr>'
+                        + '<th>Payload mass lps</th>'
+                        + '<td>' + payload.payload_mass_lps + '</td>'
+                        + '</tr>'
+                ))
+
+            tableContent += ''
+                + '</tbody></table>';
+
+            document.getElementById("kutya").innerHTML = tableContent;
+        };
+
+        return (
+            <div style={{ height: 400, width: '100%' }}>
+                <Grid container spacing={3}>
+                    <Grid item xs={12} sm={6}>
+                        <TableContainer component={Paper}>
+                            <Table className={classes.table} aria-label="simple table">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Name</TableCell>
+                                        <TableCell align="right">Launch date</TableCell>
+                                        <TableCell align="right">Launch site</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {window.result.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
+                                        <StyledTableRow onClick={showDetails(row)} key={row.mission_name}>
+                                            <TableCell component="th" scope="row">
+                                                {row.mission_name}
+                                            </TableCell>
+                                            <TableCell align="right">{row.launch_date_local}</TableCell>
+                                            <TableCell align="right">{row.launch_site.site_name_long}</TableCell>
+                                        </StyledTableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                        <TablePagination
+                            rowsPerPageOptions={[10, 15]}
+                            component="div"
+                            count={window.result.length}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onChangePage={handleChangePage}
+                            onChangeRowsPerPage={handleChangeRowsPerPage}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <Paper id="kutya" className={classes.paper}>
+                            <table>
+                                <tbody>
+                                <tr>
+                                    <td>Name</td>
+                                    <td>{row2.mission_name}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </Paper>
+                    </Grid>
+                </Grid>
+            </div>
+        );
+    }
+
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query:
+                '{\n' +
+                '  launchesPast(limit: 0) {\n' +
+                '    mission_name\n' +
+                '    launch_date_local\n' +
+                '    launch_site {\n' +
+                '      site_name_long\n' +
+                '    }\n' +
+                '    links {\n' +
+                '      article_link\n' +
+                '      video_link\n' +
+                '    }\n' +
+                '    rocket {\n' +
+                '      rocket_name\n' +
+                '      first_stage {\n' +
+                '        cores {\n' +
+                '          flight\n' +
+                '          core {\n' +
+                '            reuse_count\n' +
+                '            status\n' +
+                '          }\n' +
+                '        }\n' +
+                '      }\n' +
+                '      second_stage {\n' +
+                '        payloads {\n' +
+                '          payload_type\n' +
+                '          payload_mass_kg\n' +
+                '          payload_mass_lbs\n' +
+                '        }\n' +
+                '      }\n' +
+                '    }\n' +
+                '    ships {\n' +
+                '      name\n' +
+                '      home_port\n' +
+                '      image\n' +
+                '    }\n' +
+                '  }\n' +
+                '}\n'
+        })
+    };
+
+    fetch("https://api.spacex.land/graphql", requestOptions)
+        .then(res => res.json())
+        .then(
+            (result) => {
+                console.log(result.data.launchesPast);
+                window.result=result.data.launchesPast;
+                ReactDOM.render(
+                    <ThemeProvider theme={theme}>
+                        <App />
+                    </ThemeProvider>,
+                    document.querySelector('#root'),
+                );
+            },
+            (error) => {
+                alert(error);
+            }
+        )
+</script>
+
+</body>
+</html>
